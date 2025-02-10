@@ -1,0 +1,31 @@
+https://dadata.ru/suggestions/usage/address/ - адреса библиотек для подключения в header (index.html)
+
+https://codepen.io/dadata/pen/VLPZgG - пример подключения API с гранулярными подсказками к форме
+https://codepen.io/dadata/pen/YzOwWK
+
+ 
+
+
+Библиотеки скачаны в отдельные файлы т.к. через интернет не всегда получается 
+обратиться к библиотеке в связи с ограничениями на протокол http (одна из библиотек доступна только по этому протоколу)
+
+1. Добавить в header index.html ссылки на скачанные библиотеки
+
+  <script src="ahanter/jquery.min.js"></script>
+  <script src="ahanter/ahunter_suggest.js"></script>
+  <script src="ahanter/jquery.suggestion.min.js"></script>
+   Добавить в конце файла
+  <script src="ahanter/main.js"></script> - обработчик полей ввода, находящийся в корне
+
+1.1 Либо добавить ссылки на удаленные сервера с библиотеками  
+ <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+ <link href="https://cdn.jsdelivr.net/npm/suggestions-jquery@22.6.0/dist/css/suggestions.min.css" rel="stylesheet" />
+ <script src="https://cdn.jsdelivr.net/npm/suggestions-jquery@22.6.0/dist/js/jquery.suggestions.min.js"></script>
+  Добавить в конце файла
+  <script src="ahanter/main.js"></script> - обработчик полей ввода, находящийся в корне
+
+2. Создать в index.html форму для ввода 
+3. Поля формы должны иметь id и name, соответствующие полям в файле main.js (в обработчике)
+4. В main.js подключается token (API-ключ, сгенерированный в аккаунте)
+ 
+ 
