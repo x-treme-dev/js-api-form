@@ -5,18 +5,23 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3" crossorigin="anonymous">
     
-    <!-- Получить библиотеки удаленно или подключить их в корне проекте -->
-    <!-- 
+    <!-- Получить библиотеки dadata удаленно или подключить их в корне проекте -->
+    
     <script src="ahanter/jquery.min.js"></script>
     <script src="ahanter/ahunter_suggest.js"></script>
     <script src="ahanter/jquery.suggestion.min.js"></script>
-    -->
+	<script src="ahanter/addrValidateFunc.js"></script>
+	<script src="https://api-maps.yandex.ru/2.1/?lang=ru_RU&amp;apikey=4d49d306-6a9f-4c95-b17b-9abc4fc47714" type="text/javascript"></script>  <!--Для работы геокодера-->
     
+	
+    <!--dadata api
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
     <link href="https://cdn.jsdelivr.net/npm/suggestions-jquery@22.6.0/dist/css/suggestions.min.css" rel="stylesheet" />
     <script src="https://cdn.jsdelivr.net/npm/suggestions-jquery@22.6.0/dist/js/jquery.suggestions.min.js"></script>
-     
-    
+    <script src="ahanter/addrValidateFunc.js"></script> <!--кастомные функции, используемые в геокодировании-->
+    <!--yandex maps
+	<script src="https://api-maps.yandex.ru/2.1/?lang=ru_RU&amp;apikey=4d49d306-6a9f-4c95-b17b-9abc4fc47714" type="text/javascript"></script>-->   <!--Для работы геокодера-->
+   
      
     <title>ahanter</title>
 </head>
@@ -24,6 +29,9 @@
    <form action="send.php" method="POST" id="myForm">
     <div class="container mt-4">
       <div class="col-md-6 offset-md-2">
+	   <div class="row mb-3">
+          <input type="text" class="form-control" id="district" name="district" placeholder="Район" >
+        </div>
         <div class="row mb-3">
           <input type="text" class="form-control" id="city" name="city" placeholder="Город">
         </div>
@@ -31,9 +39,9 @@
           <input type="text" class="form-control" id="street" name="street" placeholder="улица">
         </div>
         <div class="row mb-3">
-          <input type="text" class="form-control" id="house" name="house" placeholder="дом, корпус или строение">
+          <input type="text" class="form-control" id="building" name="building" placeholder="дом, корпус или строение">
         </div>
-        <button type="submit" class="btn btn-primary">Записать</button>
+        <button type="submit" id="submit" class="btn btn-primary">Записать</button>
        
       </div>
      </div>
@@ -44,31 +52,68 @@
          <div id="message" class="alert alert-danger">waiting data...</div>
       </div>
     </div>
-  <script src="ahanter/main.js"></script>
+  <!--<script src="ahanter/functions.js"></script>-->
+  <script src="ahanter/dadata_functions.js"></script>
 
   <script type="text/javascript">
+     
+  
     $(document).ready(function() {
     $('#myForm').on('submit', function(event) {
       // Предотвращаем стандартное поведение формы 
         event.preventDefault(); 
+		
+		// !!!!!!!!!!!!!!!!!!!!!!!!!!!!код из сниппета Новая заявка (1243)
+		let addr = [];
+		let data = {}; 
+        addr[0] = data.district = $('[name="district"]').val() ? '&nbsp;' + $('[name="district"]').val() : "";
+		<!--addr[1] = data.city = $('[name="cityShort"]').val() ? $('[name="cityShort"]').val() + '.&nbsp;' + $('[name="city"]').val() : ""; -->
+		<!--addr[2] = data.street = $('[name="streetShort"]').val() ? $('[name="streetShort"]').val() + '.&nbsp;' + $('[name="street"]').val() : "";-->
+		addr[1] =  data.city = $('[name="city"]').val() ? '&nbsp;' + $('[name="city"]').val() : "";
+		addr[2] = data.street = $('[name="street"]').val() ? '&nbsp;' + $('[name="street"]').val() : "";
+		addr[3] =  data.building = $('[name="building"]').val() ? '&nbsp;' + $('[name="building"]').val() : "";
+		var yan_addr = $.grep(addr, Boolean).join(", ").replace(/&nbsp;/gi, ' ').replace(/\s/gi, '+');   
+		// в yan_addr содержится формат .+г+Симферополь,+пгт+Грэсовский,+.+ул+Грэсовская,+.+д+3
+		// после корректив р-н.+Респ+Крым+,++г+Симферополь,+пгт+Грэсовский,++ул+Грэсовская,++д+1
+	 
+        console.log('Строка yen_addr = ' + yan_addr);	
+        
+		yan_addr = addr_replace (yan_addr);
+		console.log(' addr_replace() is ' + yan_addr);
+		ymaps.geocode(yan_addr, {results: 1}).then(function (res){
+			var firstGeoObject = res.geoObjects.get(0),
+				cords = firstGeoObject.geometry.getCoordinates();
+			 data.coors = cords[0]+','+cords[1];
+			 console.log (data);
+		}, function (err) {
+			console.log(err);
+			alert('Не удалось определить координаты. Проверьте правильность адреса.');
+		});
+         		
+   		//!!!!!!!!!!!!!!!!!!!!!!!!!! код из сниппета Новая заявка (1243)
+		
+		 
+		 
         // Отправляем данные на сервер
         $.ajax({
             url: 'send.php',    /* Куда отправить запрос */
             method: 'post',    /* Метод запроса (post или get) */
             dataType: 'text', /* Тип данных в ответе (xml, json, script, html). */
             data: {
-              'city': $('#city').val(), 
-              'street': $('#street').val(),
-              'house': $('#house').val()
+			  'district': data.district,
+              'city': data.city, 
+              'street': data.street,
+              'building':  data.building
             },     /* Данные передаваемые в массиве */
             success: function(data){   /* функция которая будет выполнена после успешного запроса.  */
               $('#message').html(data);
               console.log(data); /* В переменной data содержится ответ от send.php. */
             }
         });
-        console.log(city); 
+       
     });
 });
+
 
   </script>
 </body>

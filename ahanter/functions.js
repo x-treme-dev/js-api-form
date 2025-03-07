@@ -1,10 +1,10 @@
-console.log('Hello!');
+console.log('API Dadata');
 
 // Замените на свой API-ключ
-var token = "";
+var token = "e6e693dd8c6e64338ba92d5801d64bec00ba0490";
 var $city   = $("#city");
 var $street = $("#street");
-var $house  = $("#house");
+var $building  = $("#building");
 
 // город и населенный пункт
 $city.suggestions({
@@ -24,7 +24,7 @@ $street.suggestions({
 });
 
 // дом
-$house.suggestions({
+$building.suggestions({
   token: token,
   type: "ADDRESS",
   hint: false,
